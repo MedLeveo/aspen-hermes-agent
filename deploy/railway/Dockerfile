@@ -19,3 +19,12 @@ COPY seed /opt/seed
 # image's own setup is 01-hermes-setup, so 00- lands first.
 COPY deploy/railway/00-agent-seed /etc/cont-init.d/00-agent-seed
 RUN chmod +x /etc/cont-init.d/00-agent-seed
+
+# Baked in rather than set as the platform's start command. The image's
+# entrypoint is s6 (`/init`) wrapping main-wrapper.sh, whose routing is:
+# no args -> `hermes` (the interactive CLI, not the gateway); anything else ->
+# `hermes <args>`. So the gateway needs these two words to arrive as the
+# container's CMD. A platform "start command" is executed as a program instead,
+# and there is no `gateway` binary to find -- which is exactly how the first
+# Railway deploy failed (CREATE_CONTAINER: executable `gateway` not found).
+CMD ["gateway", "run"]
