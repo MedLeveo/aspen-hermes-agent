@@ -91,7 +91,7 @@ def main() -> int:
             print(f"[cron] created {name} ({row['schedule']})")
         else:
             print(f"[cron] FAILED to create {name}: "
-                  f"{(result.stderr or result.stdout).strip()[:300]}", file=sys.stderr)
+                  f"{(result.stderr or result.stdout).strip()}", file=sys.stderr)
     return 0
 
 

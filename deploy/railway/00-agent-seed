@@ -75,11 +75,3 @@ done
 chmod 600 "$tmp"
 mv "$tmp" "$DATA/.env"
 echo "[seed] wrote .env with $(wc -l < "$DATA/.env") entries"
-
-# --- scheduled jobs -------------------------------------------------------
-# What `agent-mgr cron-sync` does from the operator's machine, done from the
-# image instead. Never fatal: the script swallows its own failures, and the
-# `|| true` covers the case where it cannot start at all.
-if [ -x /opt/seed/register-crons.py ]; then
-  /opt/seed/register-crons.py || true
-fi

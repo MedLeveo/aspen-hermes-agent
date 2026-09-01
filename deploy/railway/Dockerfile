@@ -18,8 +18,10 @@ COPY seed /opt/seed
 # Runs before the gateway: s6 executes /etc/cont-init.d in name order, and the
 # image's own setup is 01-hermes-setup, so 00- lands first.
 COPY deploy/railway/00-agent-seed /etc/cont-init.d/00-agent-seed
+COPY deploy/railway/03-agent-crons /etc/cont-init.d/03-agent-crons
 COPY deploy/railway/register-crons.py /opt/seed/register-crons.py
-RUN chmod +x /etc/cont-init.d/00-agent-seed /opt/seed/register-crons.py
+RUN chmod +x /etc/cont-init.d/00-agent-seed /etc/cont-init.d/03-agent-crons \
+        /opt/seed/register-crons.py
 
 # Baked in rather than set as the platform's start command. The image's
 # entrypoint is s6 (`/init`) wrapping main-wrapper.sh, whose routing is:
