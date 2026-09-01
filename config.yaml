@@ -41,3 +41,9 @@ plugins:
 platforms:
   plow_chat:
     enabled: true
+    # The person on the other end is not an operator: she is pregnant and she
+    # texts. A "⚠️ Gateway shutting down" ping on every deploy reads as the
+    # thing breaking, not as maintenance. The image's own comment on this flag
+    # says as much -- keep it true only for back-channels where an operator
+    # wants them.
+    gateway_restart_notification: false
