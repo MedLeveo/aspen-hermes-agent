@@ -21,7 +21,12 @@ mkdir -p seed
 # would pin them to whatever version this seed was cut from. These three are the
 # ones agent-mgr fetches from outside the image (two fleet skills through `gh`,
 # and this repo's own).
-for path in SOUL.md config.yaml plugins \
+# SOUL.md is NOT taken from the home: it is authored in this repo, and the home
+# copy is only what the last deploy-hook happened to install there. Reading it
+# back from the home silently reverts an edit made here -- which it did once.
+cp runtime/SOUL.md seed/SOUL.md
+
+for path in config.yaml plugins \
             skills/growth/plow-invite \
             skills/productivity/google-workspace \
             skills/health/prenatal; do
@@ -29,6 +34,10 @@ for path in SOUL.md config.yaml plugins \
   mkdir -p "seed/$(dirname "$path")"
   cp -R "$home/$path" "seed/$path"
 done
+
+# The cron spec travels too: register-crons.py reads it from the image at
+# boot, where agent-mgr's cron-sync is not available.
+cp runtime/crons.json seed/crons.json
 
 # The record is state, not seed: only the empty shape travels.
 mkdir -p seed/nina/exams
