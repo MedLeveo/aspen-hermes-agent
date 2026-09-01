@@ -1,6 +1,12 @@
-#!/bin/sh
+#!/command/with-contenv sh
 # Unpack the agent's home into the mounted volume, then write its dotenv from
 # the platform's environment. Runs before the gateway, every boot.
+#
+# Shebang note, the same one main-wrapper.sh carries: /init scrubs the
+# environment before running cont-init scripts, so a plain `#!/bin/sh` here
+# sees an empty environ and every platform variable reads as unset -- which is
+# how the first deploy wrote a .env with zero entries. with-contenv repopulates
+# it from /run/s6/container_environment.
 #
 # Two different rules, deliberately:
 #
@@ -21,7 +27,12 @@ SEED=/opt/seed
 mkdir -p "$DATA"
 
 # --- copy-if-absent -------------------------------------------------------
-for path in config.yaml plugins skills; do
+# Only the plugin and the fleet skills. NOT config.yaml: Hermes writes a
+# default one on first boot when the volume is empty, and copy-if-absent would
+# then preserve that default forever -- an agent with no Gemini provider, no
+# Plow Chat platform and no latch server, which is how the first deploy came
+# up. agent-mgr reinstalls config.yaml on every deploy for the same reason.
+for path in plugins skills; do
   if [ ! -e "$DATA/$path" ] && [ -e "$SEED/$path" ]; then
     cp -R "$SEED/$path" "$DATA/$path"
     echo "[seed] installed $path"
@@ -29,10 +40,12 @@ for path in config.yaml plugins skills; do
 done
 
 # --- always refreshed: what this repo authors -----------------------------
-if [ -f "$SEED/SOUL.md" ]; then
-  cp "$SEED/SOUL.md" "$DATA/SOUL.md"
-  echo "[seed] refreshed SOUL.md"
-fi
+for path in SOUL.md config.yaml; do
+  if [ -f "$SEED/$path" ]; then
+    cp "$SEED/$path" "$DATA/$path"
+    echo "[seed] refreshed $path"
+  fi
+done
 if [ -d "$SEED/skills/health/prenatal" ]; then
   mkdir -p "$DATA/skills/health"
   rm -rf "$DATA/skills/health/prenatal.incoming"
