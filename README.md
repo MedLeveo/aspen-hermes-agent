@@ -1,4 +1,4 @@
-# Aspen — a pregnancy companion you text
+# Luna — a pregnancy companion you text
 
 Text it once a week and it knows exactly how far along you are. It cobra the
 exams the schedule calls for, explains the ones you photograph, keeps the
@@ -15,7 +15,7 @@ An obstetrician sees you for fifteen minutes a month. The other twenty-nine days
 you are alone with a search engine at 3am, and the lab result that arrived four
 days before your appointment is a page of acronyms you cannot read.
 
-Aspen is not a second opinion. It is the continuity between visits: it holds the
+Luna is not a second opinion. It is the continuity between visits: it holds the
 week, it holds the calendar, it holds the paperwork, and it holds the list of
 things you keep forgetting to ask. Everything clinical goes back to the doctor.
 
@@ -142,6 +142,6 @@ wrong for the whole pregnancy.
 
 ## Not medical advice
 
-Aspen is a logistics and memory tool. It is not a medical device, it does not
+Luna is a logistics and memory tool. It is not a medical device, it does not
 practise medicine, and it does not replace prenatal care. The milestone weeks it
 uses are routine low-risk guidance; the obstetrician's own plan always wins.
