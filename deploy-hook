@@ -1,0 +1,35 @@
+#!/bin/sh
+# Seed SOUL.md and the prenatal skill into the agent's home -- copy-if-absent,
+# never clobber. Same shape as property-hunt's hook, and for the same reason:
+# the agent may edit its own skill, so the home copy is the one it runs and this
+# checkout is only the seed. To force a re-seed, remove the home copy and
+# deploy again.
+#
+# agent-mgr exports AGENT_HOME; cwd is not assumed.
+set -eu
+cd "$(dirname "$0")"
+
+home="${AGENT_HOME:?agent-mgr exports this}"
+
+[ -f runtime/SOUL.md ] || { echo "nina: no runtime/SOUL.md beside deploy-hook -- broken checkout" >&2; exit 1; }
+[ -d skill ] || { echo "nina: no skill/ beside deploy-hook -- broken checkout" >&2; exit 1; }
+
+# SOUL.md is the persona the image reads from the home root. Unlike the skill,
+# this one is refreshed on every deploy: it is authored here, not by the agent.
+cp runtime/SOUL.md "$home/SOUL.md.incoming"
+mv "$home/SOUL.md.incoming" "$home/SOUL.md"
+echo "nina: installed SOUL.md into $home"
+
+dest="$home/skills/health/prenatal"
+if [ -e "$dest" ]; then
+  echo "nina: $dest exists -- left alone (the agent's copy)"
+else
+  mkdir -p "$(dirname "$dest")"
+  rm -rf "$dest.incoming"
+  cp -R skill "$dest.incoming"
+  mv "$dest.incoming" "$dest"
+  echo "nina: seeded prenatal skill into $dest"
+fi
+
+# The record's own directories, so the agent never has to create them mid-turn.
+mkdir -p "$home/nina/exams"
