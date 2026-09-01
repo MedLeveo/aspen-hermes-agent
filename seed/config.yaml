@@ -47,3 +47,13 @@ platforms:
     # says as much -- keep it true only for back-channels where an operator
     # wants them.
     gateway_restart_notification: false
+
+# Hermes shows one-time tips the first time a user messages mid-turn or waits on
+# a long tool. They are written for an operator learning the harness -- they
+# mention /stop, /busy queue and iteration counts -- and this agent's user is
+# someone pregnant sending a text. Marked seen so a fresh install never shows
+# them; the flags are the ones agent/onboarding.py declares.
+onboarding:
+  seen:
+    busy_input_prompt: true
+    tool_progress_prompt: true
