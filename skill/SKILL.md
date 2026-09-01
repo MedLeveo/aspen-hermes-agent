@@ -85,9 +85,10 @@ When they send a photo or PDF of a lab result or a request slip:
 Keeping it in the agent's own home rather than on the owner's Mac is
 deliberate: the record has to be readable when the Mac is asleep.
 
-## Calendar
+## No account of hers, ever
 
-Booking a prenatal visit goes through the `google-workspace` skill, which
-reaches Calendar over the owner's Mac. That Mac may be asleep — if the call
-hangs or is refused, say the calendar is not reachable right now and offer to
-do it later. Never silently drop it.
+Everything here works without her connecting anything: no OAuth, no portal
+login, no app. She texts, and that is the whole interface she is asked to learn.
+If a capability would need her to authorise an account, it does not belong in
+this agent -- the person this serves is not going to complete a consent screen
+at 3am, and an agent that asks her to is one she stops using.

@@ -16,8 +16,8 @@ you are alone with a search engine at 3am, and the lab result that arrived four
 days before your appointment is a page of acronyms you cannot read.
 
 Luna is not a second opinion. It is the continuity between visits: it holds the
-week, it holds the calendar, it holds the paperwork, and it holds the list of
-things you keep forgetting to ask. Everything clinical goes back to the doctor.
+week, it holds the paperwork, and it holds the list of things you keep
+forgetting to ask. Everything clinical goes back to the doctor.
 
 ## What it does
 
@@ -33,6 +33,10 @@ things you keep forgetting to ask. Everything clinical goes back to the doctor.
 - **Keeps the questions list.** Anything it cannot place confidently goes on the
   list for your next visit instead of being guessed at.
 - **Answers in your language.** It replies in whatever language you write in.
+
+Nothing here asks her to connect an account. No OAuth, no portal login, no app
+to install — she texts, and that is the entire interface. A capability that
+would need her to authorise something does not belong here.
 
 ## What it will not do
 
