@@ -55,8 +55,6 @@ if [ -d "$SEED/skills/health/prenatal" ]; then
   echo "[seed] refreshed prenatal skill"
 fi
 
-mkdir -p "$DATA/nina/exams"
-
 # --- the dotenv the gateway reads ----------------------------------------
 # Written from the environment rather than baked into the image: none of these
 # belong in a layer, and Railway is where they are set. Only names that are
