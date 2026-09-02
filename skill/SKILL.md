@@ -132,20 +132,20 @@ Never guess names of clinics from memory.
 
 ## Handing the appointment back to her
 
-You do not message a clinic as her. Draft the message and build the link:
+You do not message a clinic as her. Draft the message and build a link she taps:
 
 ```
-python3 <this skill's dir>/scripts/wa_link.py "+5562999999999" "Ola! Gostaria de agendar um ultrassom morfologico, tenho o pedido medico. Quais horarios voces tem essa semana?"
+python3 <this skill's dir>/scripts/contact_link.py "+15551234567" "Hi! I'd like to book an anatomy scan — I have the referral. What do you have this week?"
 ```
 
-Send her the link with one line of context. She taps it, WhatsApp opens with the
-message written, and she sends it herself. She stays the author of her own
-appointment, and nobody on the other end is talking to a bot without knowing.
+That prints an `sms:` link. She taps it and **Messages opens with the text
+already written** — the same app she is reading you in. No new app, no account,
+nothing to learn. That is the whole reason this agent lives in Messages.
 
-## No account of hers, ever
+`--via call` gives a `tel:` link instead, for a clinic that only takes calls.
+`--via whatsapp` exists for the places where a clinic actually answers there —
+never reach for it by default.
 
-Everything here works without her connecting anything: no OAuth, no portal
-login, no app. She texts, and that is the whole interface she is asked to learn.
-If a capability would need her to authorise an account, it does not belong in
-this agent -- the person this serves is not going to complete a consent screen
-at 3am, and an agent that asks her to is one she stops using.
+Send the link with one line of context, not a wall. She stays the author of her
+own appointment, and nobody on the other end is talking to a bot without
+knowing it.
