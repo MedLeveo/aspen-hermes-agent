@@ -26,10 +26,18 @@ mkdir -p seed
 # back from the home silently reverts an edit made here -- which it did once.
 cp runtime/SOUL.md seed/SOUL.md
 
+# Same rule as SOUL.md: the prenatal skill is authored here, so it is copied
+# from here. Reading it back from the deployed home ships whatever the last
+# deploy-hook happened to install, which silently dropped two new scripts.
+mkdir -p seed/skills/health
+rm -rf seed/skills/health/prenatal
+cp -R skill seed/skills/health/prenatal
+
+# The rest is not ours: the plugin and the fleet skills are fetched by agent-mgr
+# through `gh`, so the deployed home is the only place they exist.
 for path in config.yaml plugins \
             skills/growth/plow-invite \
-            skills/productivity/google-workspace \
-            skills/health/prenatal; do
+            skills/productivity/google-workspace; do
   [ -e "$home/$path" ] || { echo "missing $home/$path -- deploy first" >&2; exit 1; }
   mkdir -p "seed/$(dirname "$path")"
   cp -R "$home/$path" "seed/$path"
