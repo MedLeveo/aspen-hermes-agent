@@ -43,6 +43,23 @@ for the whole pregnancy. If one refuses, ask again — never override it.
 If she only knows the due date, subtract 280 days for the LMP and confirm the
 resulting week with her before recording.
 
+## What she has already had
+
+`due_now` and `overdue` exclude anything recorded as done, so an exam she has
+had is never cobrado again. When she says she has had one:
+
+```
+python3 <this skill's dir>/scripts/prenatal.py mark-done anatomy_scan
+python3 <this skill's dir>/scripts/prenatal.py mark-done glucose --on 2026-08-20
+```
+
+Keys: `first_visit`, `nt_scan`, `anatomy_scan`, `tdap`, `glucose`,
+`repeat_labs`, `gbs`. `mark-pending <key>` undoes one recorded by mistake.
+
+If `overdue` lists something from early pregnancy that she almost certainly had,
+ask once whether she had it rather than cobrando it as late -- then record the
+answer either way.
+
 ## Remembering her
 
 Anything you learn about her — her name, first pregnancy or not, her

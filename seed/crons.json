@@ -3,7 +3,9 @@
     "name": "nina-daily",
     "schedule": "0 8 * * *",
     "deliver": "${PLOW_HOME_CHANNEL}",
-    "skills": ["prenatal"],
-    "prompt": "Run the prenatal skill's status script. If it reports has_lmp false, stay silent -- do not nag for the LMP from a cron. Otherwise decide whether this morning is worth a message, and send at most one short one, in the person's language.\n\nSend when: the gestational week has just changed (day is 0), something in due_now has not been discussed yet, an upcoming item is two weeks away or less, or a visit is near and the questions list is not empty.\n\nStay silent on every other morning. A message that carries nothing trains them to ignore you, which costs more than a missed day. Never send a greeting alone, never summarise what you already told them, and never repeat an item you raised in the last few days unless it is now overdue."
+    "skills": [
+      "prenatal"
+    ],
+    "prompt": "Write her morning message. Run the prenatal skill's status script first -- the week, the countdown, what is due, what is overdue and what she has already done all come from there, never from memory.\n\nIf it reports has_lmp false, say good morning warmly and ask how far along she is, once. Nothing else.\n\nOtherwise follow SOUL.md's morning message: where she is (week and how far there is to go), at most ONE thing that matters today, and a real question about how she is feeling. One or two sentences, in her language, never a list.\n\nDo not raise something already in `done`. Do not repeat the same item you raised the last few mornings unless it is now in `overdue`. Vary the wording -- an identical message every day stops being read. If nothing is due, the message is shorter, not skipped."
   }
 ]
