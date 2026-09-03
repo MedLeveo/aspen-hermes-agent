@@ -11,9 +11,20 @@
 # plow-init dies on the dotenv, s6 stops the container, and it crash-loops.
 #
 # So: seed what is missing from the baked copy, and reapply exactly the
-# ownership the Dockerfile applies. Copy-if-absent, never clobber -- after the
-# first boot this directory is the agent's own state, and SOUL.md and the
-# skills are refreshed by the image's own reconciliation, not by this.
+# ownership the Dockerfile applies.
+#
+# The 00- prefix is load-bearing. cont-init runs in name order and the upstream
+# base image's own setup is 01-hermes-setup, which seeds ITS default home files
+# -- including a generic 668-byte SOUL.md -- into a home that has none. Named
+# 01-luna-home this ran second, found that file, and declared the home
+# populated: the agent came up as a stock Plow assistant with our persona
+# nowhere in it, and the only visible symptom was that it answered a question
+# with a waving hand.
+#
+# SOUL.md is overwritten every boot: it is authored in this repo, it is
+# root-owned so the agent cannot replace it, and a redeploy is how this agent
+# changes. config.yaml is copy-if-absent instead -- the chat plugin and
+# plow-init both rewrite it, so the home's copy is the agent's own.
 set -eu
 
 HOME_DIR="${HERMES_HOME:-/var/lib/hermes}"
@@ -60,19 +71,14 @@ echo "[luna] running as $(id -u):$(id -g); home:"
 ls -ldn "$HOME_DIR" 2>/dev/null || echo "  (no $HOME_DIR)"
 ls -lan "$HOME_DIR" 2>/dev/null | head -20 || true
 
-if [ -e "$HOME_DIR/SOUL.md" ] && [ -e "$HOME_DIR/config.yaml" ]; then
-  # Populated is not the same as correctly owned: a home carried over from an
-  # earlier layout has both files and none of the ownership this image needs.
-  # Reapplying it is idempotent, so it is done unconditionally rather than
-  # trusted to have been done once.
-  echo "[luna] home populated -- reapplying ownership only"
-  harden_home
-  exit 0
-fi
-
-echo "[luna] home at $HOME_DIR is missing its seed -- restoring"
 mkdir -p "$HOME_DIR"
-# -n: an agent that has already written state keeps it. Only the gaps are
-# filled, which is what makes this safe to run on every boot.
+
+# Everything the agent may own: only the gaps, so state written on an earlier
+# boot survives.
 cp -Rn "$SEED"/. "$HOME_DIR"/
+
+# And the one file that is ours, unconditionally.
+cp -f "$SEED/SOUL.md" "$HOME_DIR/SOUL.md"
+echo "[luna] seeded gaps and refreshed SOUL.md ($(wc -c < "$HOME_DIR/SOUL.md") bytes)"
+
 harden_home
