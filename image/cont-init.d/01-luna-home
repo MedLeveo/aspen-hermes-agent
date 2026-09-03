@@ -1,0 +1,47 @@
+#!/command/with-contenv sh
+# Restore the home on a host whose volume does not inherit image content.
+#
+# Compose mounts a Docker named volume at HERMES_HOME, and Docker populates an
+# empty named volume from the image: the seed the Dockerfile copied there, and
+# the ownership and modes it set on it, all arrive. Nothing to do, and this
+# script finds a populated home and exits.
+#
+# A PaaS mounts raw block storage at the same path. It arrives empty and
+# root-owned, so it shadows the seed and leaves a home the agent cannot write --
+# plow-init dies on the dotenv, s6 stops the container, and it crash-loops.
+#
+# So: seed what is missing from the baked copy, and reapply exactly the
+# ownership the Dockerfile applies. Copy-if-absent, never clobber -- after the
+# first boot this directory is the agent's own state, and SOUL.md and the
+# skills are refreshed by the image's own reconciliation, not by this.
+set -eu
+
+HOME_DIR="${HERMES_HOME:-/var/lib/hermes}"
+SEED=/opt/hermes/plow-home-seed
+
+[ -d "$SEED" ] || { echo "[luna] no $SEED in image -- broken build" >&2; exit 1; }
+
+if [ -e "$HOME_DIR/SOUL.md" ] && [ -e "$HOME_DIR/config.yaml" ]; then
+  echo "[luna] home already populated -- leaving it alone"
+  exit 0
+fi
+
+echo "[luna] home at $HOME_DIR is missing its seed -- restoring"
+mkdir -p "$HOME_DIR"
+# -n: an agent that has already written state keeps it. Only the gaps are
+# filled, which is what makes this safe to run on every boot.
+cp -Rn "$SEED"/. "$HOME_DIR"/
+
+# The same ownership the Dockerfile sets, for the same reasons. The home itself
+# must stay writable by uid 10000 -- the gateway creates state.db, lock files
+# and the session tree directly in it -- while the sticky bit stops the agent
+# unlinking entries it does not own. That is what keeps a root-owned SOUL.md
+# unreplaceable inside a directory the agent can write.
+chown -R 10000:10000 "$HOME_DIR"
+chown root:hermes "$HOME_DIR" "$HOME_DIR/skills"
+chmod 3770 "$HOME_DIR" "$HOME_DIR/skills"
+chown root:root "$HOME_DIR/SOUL.md"
+chmod 0644 "$HOME_DIR/SOUL.md"
+chown 10000:10000 "$HOME_DIR/config.yaml"
+chmod 0640 "$HOME_DIR/config.yaml"
+echo "[luna] home restored"

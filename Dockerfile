@@ -143,6 +143,16 @@ COPY --chmod=0644 image/seed/config.yaml /opt/hermes/plow-seed/config.yaml
 # the agent's reach for the same reason: luna-crons converges them onto the
 # scheduler at boot, and a spec the agent could rewrite is not a spec.
 COPY --chmod=0644 image/crons/crons.json /opt/hermes/plow-seed/crons.json
+
+# A second copy of the whole seed, outside the home, for a host whose volume
+# does not inherit image content.
+#
+# Compose mounts a Docker NAMED volume here, and Docker populates an empty one
+# from the image -- seed, ownership and modes included. A PaaS mounts raw block
+# storage instead: it arrives empty and root-owned, shadowing everything the
+# COPY above put there, and plow-init then cannot even write the dotenv.
+# 01-luna-home restores this copy when it finds a home that lost it.
+COPY image/seed/ /opt/hermes/plow-home-seed/
 # Ahead of upstream's own cont-init, which seeds a config of its own into a
 # home that has none -- one with no chat platform and no provider in it.
 COPY --chmod=0755 image/cont-init.d/ /etc/cont-init.d/

@@ -99,7 +99,8 @@ seed.
 | `image/seed/config.yaml` | the reference config plus this agent's overrides |
 | `image/crons/crons.json` | the one scheduled job, as data |
 | `image/s6-overlay/s6-rc.d/luna-crons/` | converges that job onto the scheduler at boot |
-| `image/cont-init.d/01-luna-credentials` | writes the credential from the environment on a host with no bind mount |
+| `image/cont-init.d/01-luna-home` | restores the home on a host whose volume does not inherit image content |
+| `image/cont-init.d/02-luna-credentials` | writes the credential from the environment on a host with no bind mount |
 | `Dockerfile`, the rest of `image/` | vendored boot layer |
 
 ## The dates are code, not prompt
@@ -124,6 +125,14 @@ must not be able to outrank the credential the image was given. A PaaS has no
 bind mount, so `image/cont-init.d/01-luna-credentials` writes that file from
 `PLOW_API_BASE` and `PLOW_AGENT_TOKEN` — and **never** overwrites one that is
 already there, which keeps a mounted credential authoritative.
+
+The volume is the other difference. Compose mounts a Docker *named* volume at
+the home, and Docker populates an empty one from the image — seed, ownership and
+modes included. A PaaS mounts raw block storage: it arrives empty and
+root-owned, shadowing the seed and leaving a home the agent cannot write, which
+crash-loops the container on `plow-init`. `01-luna-home` seeds the gaps from a
+baked copy kept outside the home and reapplies the ownership the Dockerfile
+sets.
 
 That is how this agent actually runs: the container is hosted, the Mac it
 reaches is still a Mac, and the two meet over the Plow relay.
