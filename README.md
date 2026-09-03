@@ -101,6 +101,7 @@ seed.
 | `image/s6-overlay/s6-rc.d/luna-crons/` | converges that job onto the scheduler at boot |
 | `image/cont-init.d/00-luna-home` | restores the home on a host whose volume does not inherit image content |
 | `image/cont-init.d/02-luna-credentials` | writes the credential from the environment on a host with no bind mount |
+| `image/cont-init.d/02-luna-own` | gives the dotenv back to root, for a host where root is not privileged |
 | `Dockerfile`, the rest of `image/` | vendored boot layer |
 
 ## The dates are code, not prompt
@@ -125,6 +126,17 @@ must not be able to outrank the credential the image was given. A PaaS has no
 bind mount, so `image/cont-init.d/02-luna-credentials` writes that file from
 `PLOW_API_BASE` and `PLOW_AGENT_TOKEN` — and **never** overwrites one that is
 already there, which keeps a mounted credential authoritative.
+
+The capability set is the sharpest difference. A PaaS drops
+`CAP_DAC_OVERRIDE`, so root obeys file modes like anyone else — and the boot
+order then matters in a way it never does on a normal host. The base image's
+`01-hermes-setup` chowns the whole home to uid 10000; `plow-init` then runs as
+root and writes `$HERMES_HOME/.env`. It hardens the directory, `skills/` and
+`SOUL.md` first, but not the dotenv, so the dotenv is still uid 10000 mode
+0640 — and root, being neither its owner nor in its group, gets EACCES.
+`02-luna-own` runs after that hook and hands the dotenv back to `root:hermes
+0640`. On a host where root keeps the capability the same write just succeeds,
+which is why the reference image needs none of this.
 
 The volume is the other difference. Compose mounts a Docker *named* volume at
 the home, and Docker populates an empty one from the image — seed, ownership and

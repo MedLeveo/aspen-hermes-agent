@@ -32,7 +32,10 @@ SEED=/opt/hermes/plow-home-seed
 
 [ -d "$SEED" ] || { echo "[luna] no $SEED in image -- broken build" >&2; exit 1; }
 
-harden_home() {
+# Enough ownership for the seed to be readable. The authoritative pass is
+# 02-luna-own, which runs after the base image's 01-hermes-setup -- that hook
+# chowns the whole home to uid 10000, undoing anything set here.
+seed_ownership() {
   # The same ownership the Dockerfile sets, for the same reasons. The home
   # itself must stay writable by uid 10000 -- the gateway creates state.db,
   # lock files and the session tree directly in it -- while the sticky bit
@@ -62,14 +65,8 @@ harden_home() {
     chown root:hermes "$HOME_DIR/.env" || true
     chmod 0640 "$HOME_DIR/.env" || true
   fi
-  echo "[luna] ownership applied"
+  echo "[luna] seed ownership applied"
 }
-
-# Say what is actually there. A crash-loop on this path costs a build per
-# guess otherwise, and the useful facts are three lines long.
-echo "[luna] running as $(id -u):$(id -g); home:"
-ls -ldn "$HOME_DIR" 2>/dev/null || echo "  (no $HOME_DIR)"
-ls -lan "$HOME_DIR" 2>/dev/null | head -20 || true
 
 mkdir -p "$HOME_DIR"
 
@@ -81,4 +78,4 @@ cp -Rn "$SEED"/. "$HOME_DIR"/
 cp -f "$SEED/SOUL.md" "$HOME_DIR/SOUL.md"
 echo "[luna] seeded gaps and refreshed SOUL.md ($(wc -c < "$HOME_DIR/SOUL.md") bytes)"
 
-harden_home
+seed_ownership

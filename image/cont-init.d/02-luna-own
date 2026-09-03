@@ -1,0 +1,47 @@
+#!/command/with-contenv sh
+# Hand the dotenv back to root, after the base image has taken it.
+#
+# This exists because of one difference between a normal Docker host and a
+# PaaS: the PaaS drops CAP_DAC_OVERRIDE, so root is subject to file modes like
+# anyone else. Everything below follows from that.
+#
+# The boot goes: this repo's 00-luna-home seeds the home, then the base image's
+# 01-hermes-setup chowns the whole home to uid 10000 ("Fixing ownership of
+# /var/lib/hermes (targeted) to hermes"), then plow-init runs as root and
+# writes $HERMES_HOME/.env.
+#
+# plow-init hardens the home before that write, but it hardens the directory,
+# skills/ and SOUL.md -- not the dotenv. So the dotenv is left as the base image
+# made it: uid 10000, mode 0640. Root is neither its owner nor in its group,
+# and with DAC_OVERRIDE gone that is EACCES -- plow-init dies, s6 stops the
+# container, and it crash-loops. On a host where root keeps the capability the
+# same write succeeds and none of this is visible, which is why the reference
+# image needs nothing here.
+#
+# So: run AFTER 01-hermes-setup (the 02- prefix is what does that) and give the
+# dotenv to root:hermes 0640 -- the ownership plow-init itself writes it with,
+# readable by the agent and writable only by root.
+set -eu
+
+HOME_DIR="${HERMES_HOME:-/var/lib/hermes}"
+
+[ -d "$HOME_DIR" ] || exit 0
+
+# The directory and skills/ too: plow-init sets these itself a moment later,
+# but doing it here means a boot that fails before plow-init still leaves a
+# home the agent can use.
+chown root:hermes "$HOME_DIR" 2>/dev/null || true
+chmod 3770 "$HOME_DIR" 2>/dev/null || true
+if [ -d "$HOME_DIR/skills" ]; then
+  chown root:hermes "$HOME_DIR/skills" 2>/dev/null || true
+  chmod 3770 "$HOME_DIR/skills" 2>/dev/null || true
+fi
+
+# The one that actually matters.
+if [ -e "$HOME_DIR/.env" ]; then
+  chown root:hermes "$HOME_DIR/.env" 2>/dev/null || true
+  chmod 0640 "$HOME_DIR/.env" 2>/dev/null || true
+  echo "[luna] dotenv: $(ls -ldn "$HOME_DIR/.env")"
+fi
+
+echo "[luna] home: $(ls -ldn "$HOME_DIR")"
