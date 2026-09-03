@@ -2,6 +2,14 @@
 # every downstream variant image built FROM it — inherits this exact upstream
 # filesystem, and a moved upstream tag would substitute code on boxes holding
 # customer credentials.
+# Declared before the first FROM so it is a GLOBAL build arg: a stage that
+# re-declares it bare inherits this default. Held inside the `base` stage
+# instead, the `plugin` stage's bare re-declaration got an empty value and
+# the build failed on `PLOW_CHAT_PLUGIN_SHA is not a 40-character commit SHA`
+# -- only on the classic builder, so it is invisible to anyone whose Docker
+# defaults to BuildKit and fatal to anyone whose does not.
+ARG PLOW_CHAT_PLUGIN_SHA=26e22dbdc22059d70f83b4ac34bf9951972592ab
+
 FROM nousresearch/hermes-agent@sha256:8f4e8677281eca188bc9d2fda90806646ba19941fce55fa8fda2d63112ff48a8 AS base
 
 # The plow_chat plugin's canonical home is plow-pbc/hermes-plow-chat; this

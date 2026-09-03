@@ -69,10 +69,24 @@ if you want it to reach a browser, and
 git clone https://github.com/plow-pbc/plow-agents.git
 cd plow-agents
 
-bin/plow-agents login --new-line     # texts you a code; the handset is the identity
-bin/plow-agents lines                # find your free line's ln_ id
-bin/plow-agents mint ln_xxx          # writes ./plow-credentials
+bin/plow-agents login          # texts you a code; the handset that sends it is
+                               # the identity. Add --new-line only if this
+                               # account has no assistant line yet.
+bin/plow-agents lines          # pick one marked `free`
+bin/plow-agents mint ln_xxx    # writes ./plow-credentials
+```
 
+**Set your timezone before starting it.** The container is UTC otherwise, and
+the daily morning message is scheduled for 08:00 — which would reach you at
+four in the morning. One line in `.env`, beside `compose.yml`:
+
+```sh
+echo 'TZ=America/New_York' >> .env
+```
+
+Then:
+
+```sh
 PLOW_AGENT_REPO=https://github.com/MedLeveo/aspen-hermes-agent.git#main \
   docker compose up --build
 ```
