@@ -28,10 +28,21 @@ forgetting to ask. Everything clinical goes back to the doctor.
   knows which weeks each belongs to and raises them before they are late.
 - **Messages first.** A daily job decides whether this morning is worth a
   message, and stays silent when it is not.
-- **Reads what you photograph.** A request slip or a lab result, explained in
-  plain language and filed where you can find it again.
+- **Reads what you photograph.** Results reach you before anyone explains them —
+  a portal posts your labs and you read them at 11pm, days before your
+  appointment. Photograph it and it tells you what the test is and what it is
+  for, in plain language, and files it where you can find it again. What it
+  *means* stays your doctor's to say.
 - **Keeps the questions list.** Anything it cannot place confidently goes on the
   list for your next visit instead of being guessed at.
+- **Briefs you before the appointment.** The day before, it sends what to walk
+  in holding: how far along you'll be, what that visit usually covers, the
+  questions you collected, and the symptoms you mentioned in between — with when
+  they started.
+- **Remembers the deadlines nobody owns.** Telling your employer your leave
+  dates, choosing a pediatrician, hospital pre-registration, adding the baby to
+  your insurance. Not medical, not on anyone's checklist, and expensive to
+  miss.
 - **Answers in your language.** It replies in whatever language you write in.
 
 Nothing here asks her to connect an account. No OAuth, no portal login, no app

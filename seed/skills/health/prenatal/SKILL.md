@@ -53,12 +53,49 @@ python3 <this skill's dir>/scripts/prenatal.py mark-done anatomy_scan
 python3 <this skill's dir>/scripts/prenatal.py mark-done glucose --on 2026-08-20
 ```
 
-Keys: `first_visit`, `nt_scan`, `anatomy_scan`, `tdap`, `glucose`,
-`repeat_labs`, `gbs`. `mark-pending <key>` undoes one recorded by mistake.
+Clinical keys: `first_visit`, `nt_scan`, `anatomy_scan`, `tdap`, `glucose`,
+`repeat_labs`, `gbs`. Logistics keys: `leave_notice`, `pediatrician`,
+`preadmission`, `insurance_add`. `mark-pending <key>` undoes one recorded by
+mistake, and `schedule` prints the whole table with its weeks.
+
+Each milestone carries a `kind`. **clinical** is her doctor's territory and you
+only remind. **logistics** — leave dates, the pediatrician, hospital
+pre-registration, adding the baby to insurance — belongs to nobody, which is
+exactly why it gets missed, and it is where you can help outright.
 
 If `overdue` lists something from early pregnancy that she almost certainly had,
 ask once whether she had it rather than cobrando it as late -- then record the
 answer either way.
+
+## What she is carrying between visits
+
+Every question she asks that you cannot place, and every symptom she mentions,
+gets recorded — that is what makes the brief worth anything:
+
+```
+python3 <this skill's dir>/scripts/prenatal.py note question "posso viajar de aviao em outubro?"
+python3 <this skill's dir>/scripts/prenatal.py note symptom "azia a noite piorou"
+```
+
+When she tells you when her next appointment is:
+
+```
+python3 <this skill's dir>/scripts/prenatal.py set-visit 2026-09-04
+```
+
+The day before, `status` reports `days_to_visit`, and the brief is:
+
+```
+python3 <this skill's dir>/scripts/prenatal.py visit-brief
+```
+
+It returns the week she will be at the visit, what that week usually covers,
+and everything she has collected **since the last visit** — not since the
+beginning. After the appointment, close it so the next brief starts clean:
+
+```
+python3 <this skill's dir>/scripts/prenatal.py visit-done
+```
 
 ## Remembering her
 
@@ -85,10 +122,10 @@ it.
 
 ## The questions list
 
-Anything you cannot place confidently goes here — that is the honest default,
-not a failure. Append to `/opt/data/nina/questions.md` with the date and the
-week it came up. When a visit is near, send the list back unprompted and offer
-to clear it afterwards.
+Anything you cannot place confidently becomes `note question` — that is the
+honest default, not a failure, and it is what the visit brief is built from.
+Never keep it in your head between turns; if it is not recorded, it does not
+exist by the time the appointment comes.
 
 ## Filing an exam she photographs
 
