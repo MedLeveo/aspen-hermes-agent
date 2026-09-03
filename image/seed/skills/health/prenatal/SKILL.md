@@ -43,6 +43,17 @@ for the whole pregnancy. If one refuses, ask again — never override it.
 If she only knows the due date, subtract 280 days for the LMP and confirm the
 resulting week with her before recording.
 
+## When she has no doctor yet
+
+`due_now` carries `choose_ob` from week 4, and it is `logistics` on purpose:
+finding an obstetrician and getting on their books is nobody's job and the one
+with a real deadline, because the waiting list is weeks. Treat it as the first
+thing, ahead of anything clinical.
+
+Use the search and the link exactly as below — city first, three options at
+most, then the `sms:` link with the appointment request drafted. `remember` who
+she ends up choosing, so nothing asks her again.
+
 ## What she has already had
 
 `due_now` and `overdue` exclude anything recorded as done, so an exam she has

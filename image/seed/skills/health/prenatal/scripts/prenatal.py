@@ -35,7 +35,14 @@ GESTATION_DAYS = 280  # Naegele: LMP + 40 weeks
 # agent only reminds. "logistics" is nobody's territory, which is exactly why it
 # gets missed -- and it is where an agent is unambiguously allowed to help.
 MILESTONES: list[dict] = [
-    {"key": "first_visit", "start": 6, "end": 8, "kind": "clinical",
+    # Before anything clinical: she has to get into care at all. This is the
+    # gap a newly pregnant person is actually in -- no obstetrician, no
+    # appointment, no idea that either is the next step.
+    {"key": "choose_ob", "start": 4, "end": 8, "kind": "logistics",
+     "what": "Find an obstetrician or clinic and book the first appointment — "
+             "most take a few weeks to get in, so this is the one thing that "
+             "cannot wait"},
+    {"key": "first_visit", "start": 6, "end": 10, "kind": "clinical",
      "what": "First prenatal visit and baseline labs"},
     {"key": "nt_scan", "start": 11, "end": 14, "kind": "clinical",
      "what": "First-trimester ultrasound with nuchal translucency"},
