@@ -1,0 +1,121 @@
+# Overrides only. Hermes deep-merges this over its own defaults, so everything
+# it already gets right is left out — a copy of the generated config would be
+# 180 lines of upstream defaults that silently pin themselves the day upstream
+# changes one.
+#
+# Credential-free and tenant-free by construction: one public image serves
+# every tenant. The image owns each invariant config shape; first boot writes
+# the referenced values to Hermes' dotenv without copying a credential into
+# this file.
+# Named `plow`, and the name is enforced rather than cosmetic: provisioning
+# greps the installed config for this exact key and refuses the image without
+# it. Plow's own paste-ready snippet emits the same name (and `plow-<device>`
+# for the per-device form), so a provisioned agent and a hand-registered one
+# read alike,
+# and it is the prefix the relay's tools carry in the model's tool list.
+mcp_servers:
+  plow:
+    url: "${PLOW_MCP_URL}"
+    headers:
+      Authorization: "Bearer ${PLOW_AGENT_TOKEN}"
+    enabled: false
+# `clarify` is the tool behind the ❓ rows: it renders a blocking menu and stops
+# the turn until the owner answers it. Over iMessage there is nobody who can --
+# the menu has no rendering in the transport the owner is actually holding, so
+# the turn simply stops. And it has never been reached deliberately: it is what
+# a turn grabs when it cannot find the mechanism it wants, and it fired three
+# times during onboarding as "❓ placeholder".
+#
+# So the tool is taken away rather than forbidden in prose, which held right up
+# until a turn was confused -- exactly when it does not. `clarify` is the only
+# tool in its toolset (tools/clarify_tool.py), so disabling the toolset removes
+# that one and nothing else; the key is read by gateway/run.py.
+agent:
+  disabled_toolsets:
+    - clarify
+    # `browser` is Hermes' own browser_* / browser_exec stack. Nothing on
+    # this box can back it: the Browser Use harness needs a desktop Chrome and
+    # the agent-browser CLI is not installed, so every call ends in
+    # chrome-not-running. Advertised anyway, a fresh agent picks it over the
+    # relay's own browser tools, fails, and tells the owner the browser is
+    # down. Browsing goes through the relay, on the owner's own machine.
+    - browser
+
+model:
+  default: anthropic/claude-sonnet-5
+  provider: plow
+  base_url: "${PLOW_API_BASE}/v1"
+  key_env: HERMES_CUSTOM_PLOW_API_KEY
+providers:
+  plow:
+    name: plow
+    base_url: "${PLOW_API_BASE}/v1"
+    model: anthropic/claude-sonnet-5
+    key_env: HERMES_CUSTOM_PLOW_API_KEY
+    stale_timeout_seconds: 55
+    models:
+      anthropic/claude-sonnet-5: {}
+# Hermes announces every memory write, and that is noise to an owner who asked
+# one question over iMessage.
+#
+# NOT set here: display.interim_assistant_messages. Hermes also delivers any
+# prose the model emits before or between tool calls as its own chat message,
+# and turning that off looked like the structural fix for commentary reaching
+# the owner. It is the opposite: with interim delivery off, the introduction
+# disappears and the owner's turn becomes a bare acknowledgement of work they
+# never saw.
+#
+# The model writes the real message mid-turn, before its last tool call, and a
+# note to itself afterwards. Interim delivery is what carries the real message;
+# switching it off deletes that and keeps only the note. A leaked note is
+# cosmetic; a missing introduction is the product. So the commentary stays a
+# prompt problem, and this key stays absent until something can suppress the
+# notes without suppressing the message they were written beside.
+display:
+  memory_notifications: "off"
+  # When a write_file or patch fails and nothing later writes that path,
+  # Hermes appends a "⚠️ File-mutation verifier" footer to the reply —
+  # container paths and a traceback, addressed to a developer reading a
+  # terminal. Delivered to an owner over iMessage it is unreadable noise in
+  # the middle of an answer; seen live during onboarding. The model still
+  # gets the tool's failure in its own turn, so the guard against a silent
+  # over-claim survives; only the footer to the owner stops.
+  file_mutation_verifier: false
+# Hermes' 2200-char default is a budget for durable technique notes, and an
+# agent that also records outcomes ("the $1,500 transfer completed") loses them
+# to consolidation within a day or two — the one-line facts are what get dropped
+# when the store is over budget, and a later session then acts as if the thing
+# never happened. 6000 leaves room for both.
+memory:
+  memory_char_limit: 6000
+platforms:
+  plow_chat:
+    enabled: true
+    # The person on the other end is not an operator: she is pregnant and she
+    # texts. A "Gateway shutting down" warning on every deploy reads as the
+    # thing breaking, not as maintenance.
+    gateway_restart_notification: false
+# The agent runs as the host user on its own VM; there is no container runtime
+# on the box to hand a terminal to.
+terminal:
+  backend: local
+group_sessions_per_user: false
+onboarding:
+  profile_build: "off"
+  # Hermes' first-run tips explain /stop, /busy queue and iteration counters.
+  # They are written for an operator learning the harness, and this agent's
+  # user is someone pregnant sending a text.
+  seen:
+    busy_input_prompt: true
+    tool_progress_prompt: true
+plugins:
+  enabled:
+    - plow-chat-platform
+  entries:
+    plow-chat-platform:
+      # The plugin registers the platform plus its Plow-specific tools, and
+      # none of them replaces an image tool. Denying overrides keeps a future
+      # name collision from silently shadowing one, which would be invisible
+      # from this file.
+      allow_tool_override: false
+_config_version: 37

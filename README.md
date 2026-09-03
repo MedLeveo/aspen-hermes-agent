@@ -1,19 +1,19 @@
 # Luna — a pregnancy companion you text
 
-Text it once a week and it knows exactly how far along you are. It cobra the
-exams the schedule calls for, explains the ones you photograph, keeps the
-questions you meant to ask at your next visit — and when you describe something
-that should not wait, it does not reassure you. It tells you to go.
+Tell it once how far along you are and it never asks again. It raises the exams
+the week calls for, explains the ones you photograph, keeps the questions you
+meant to ask, briefs you the day before your appointment — and when you describe
+something that should not wait, it does not reassure you. It tells you to go.
 
-A [Hermes](https://github.com/NousResearch/hermes-agent) agent for
-[Plow Chat](https://plow.co), deployed with
-[`agent-mgr`](https://github.com/plow-pbc/agent-mgr).
+A [Plow](https://plow.co) agent: a container that reaches its owner through
+Plow Chat and nothing else.
 
 ## Why
 
 An obstetrician sees you for fifteen minutes a month. The other twenty-nine days
-you are alone with a search engine at 3am, and the lab result that arrived four
-days before your appointment is a page of acronyms you cannot read.
+you are alone with a search engine at 3am, and the results reach you before
+anyone explains them — a portal posts your labs and you read them at 11pm, days
+before your visit.
 
 Luna is not a second opinion. It is the continuity between visits: it holds the
 week, it holds the paperwork, and it holds the list of things you keep
@@ -21,42 +21,37 @@ forgetting to ask. Everything clinical goes back to the doctor.
 
 ## What it does
 
-- **Knows the week, always.** Tell it "I'm 22 weeks" — or when your last period
-  started — and it never has to ask again. Every date it states is computed, not
-  estimated.
-- **Cobra the schedule.** Anatomy scan, glucose test, Tdap, group B strep: it
-  knows which weeks each belongs to and raises them before they are late.
-- **Messages first.** A daily job decides whether this morning is worth a
-  message, and stays silent when it is not.
-- **Reads what you photograph.** Results reach you before anyone explains them —
-  a portal posts your labs and you read them at 11pm, days before your
-  appointment. Photograph it and it tells you what the test is and what it is
-  for, in plain language, and files it where you can find it again. What it
-  *means* stays your doctor's to say.
-- **Keeps the questions list.** Anything it cannot place confidently goes on the
-  list for your next visit instead of being guessed at.
-- **Briefs you before the appointment.** The day before, it sends what to walk
-  in holding: how far along you'll be, what that visit usually covers, the
-  questions you collected, and the symptoms you mentioned in between — with when
-  they started.
-- **Remembers the deadlines nobody owns.** Telling your employer your leave
-  dates, choosing a pediatrician, hospital pre-registration, adding the baby to
-  your insurance. Not medical, not on anyone's checklist, and expensive to
-  miss.
-- **Answers in your language.** It replies in whatever language you write in.
+- **Knows the week, always.** "I'm 22 weeks" is enough. Every date it states is
+  computed, never estimated.
+- **Raises what the week calls for.** Anatomy scan, glucose test, Tdap, group B
+  strep — and it stops raising anything you tell it you have had.
+- **Writes to you every morning.** Where you are, how far there is to go, at
+  most one thing that matters today, and a real question about how you feel.
+- **Briefs you before the appointment.** The day before: how far along you'll
+  be, what that visit usually covers, the questions you collected, and the
+  symptoms you mentioned in between — with when they started.
+- **Reads what you photograph.** What the test is and what it is for, in plain
+  language, filed where you can find it again. What it *means* stays your
+  doctor's to say.
+- **Remembers the deadlines nobody owns.** Leave dates and FMLA notice,
+  choosing a pediatrician, hospital pre-registration, adding the baby to your
+  insurance. Not medical, not on anyone's checklist, expensive to miss.
+- **Finds you somewhere to go,** and hands the appointment back: an `sms:` link
+  that opens Messages with the message already written, so you send it yourself.
+- **Answers in your language,** whichever one you wrote in.
 
-Nothing here asks her to connect an account. No OAuth, no portal login, no app
-to install — she texts, and that is the entire interface. A capability that
-would need her to authorise something does not belong here.
+Nothing here asks you to connect an account. No OAuth, no portal login, no app
+to install — you text, and that is the entire interface. A capability that would
+need you to authorise something does not belong here.
 
 ## What it will not do
 
 It does not diagnose, prescribe, adjust medication, or tell you a result is
-normal. Asked something clinical, it has exactly three answers: *this is common
+normal. Asked something clinical it has exactly three answers: *this is common
 at this stage* (and mention it at your next visit), *I have added this to your
 questions list*, or *this needs care now*. There is no fourth.
 
-And one rule sits above every other, in [`runtime/SOUL.md`](runtime/SOUL.md):
+One rule sits above every other, in [`image/seed/SOUL.md`](image/seed/SOUL.md):
 bleeding, leaking fluid, severe pain, fever, reduced fetal movement, visual
 changes, sudden swelling — it stops, and it says go. No reassurance, no
 clarifying question first.
@@ -66,94 +61,76 @@ clarifying question first.
 
 ## Running it
 
-You need [`agent-mgr`](https://github.com/plow-pbc/agent-mgr) on `PATH`, a
-Docker daemon, an authenticated `gh` (`deploy` fetches the Plow Chat plugin
-through it), a Mac running [Plow Latch](https://github.com/plow-pbc/latch), and
-a [Gemini API key](https://aistudio.google.com/apikey).
+You need Docker, a Mac running [Plow Latch](https://github.com/plow-pbc/latch)
+if you want it to reach a browser, and
+[`plow-agents`](https://github.com/plow-pbc/plow-agents).
 
 ```sh
-git clone https://github.com/MedLeveo/aspen-hermes-agent.git ~/services/aspen-hermes-agent
-agent-mgr register aspen ~/services/aspen-hermes-agent
-agent-mgr deploy aspen
+git clone https://github.com/plow-pbc/plow-agents.git
+cd plow-agents
+
+bin/plow-agents login --new-line     # texts you a code; the handset is the identity
+bin/plow-agents lines                # find your free line's ln_ id
+bin/plow-agents mint ln_xxx          # writes ./plow-credentials
+
+PLOW_AGENT_REPO=https://github.com/MedLeveo/aspen-hermes-agent.git#main \
+  docker compose up --build
 ```
 
-`deploy` builds the home and runs this repo's `deploy-hook`, which installs
-`SOUL.md` and the `prenatal` skill into it. Then put your own credentials in the
-dotenv it created — `agent-mgr resolve aspen` prints its path:
+Then text the number that line answers on and say hello.
 
-```sh
-echo 'GEMINI_API_KEY=...'          >> ~/.hermes-aspen/.env
-echo 'AGENT_TZ=America/Sao_Paulo'  >> ~/.hermes-aspen/.env
-```
+No API key: inference comes from Plow, and the credential `mint` writes is the
+only one the container ever sees. The first build takes a few minutes.
 
-Then bring it up. `activate` prints a code to text from the phone that should
-own the agent — **it is a one-time spend and the phone that answers becomes the
-owner permanently**:
-
-```sh
-agent-mgr activate aspen
-agent-mgr up aspen
-agent-mgr cron-sync aspen
-```
-
-No `sign-in` step: the model is Gemini, which authenticates by API key from the
-dotenv rather than by OAuth.
-
-Finally, give it hands. In Plow Latch **on the Mac it should drive**, mint a
-credential under *Agents → Connect MCP client → "Can't use OAuth? Create a
-static credential"*, then:
-
-```sh
-agent-mgr set-latch aspen     # paste the whole JSON; input is hidden
-agent-mgr restart aspen
-agent-mgr check-latch aspen   # "latch reachable ... (HTTP 200)"
-```
-
-Text the number Plow replies with, and say hello.
-
-## Running it somewhere that is not a Mac
-
-`agent-mgr` builds the agent's home on the operator's machine, using `gh` to
-fetch the Plow Chat plugin and the fleet skills. A cloud host has none of that
-and its volume starts empty, so [`deploy/railway/`](deploy/railway) packages the
-home as an image seed and unpacks it before the gateway starts.
-
-That is how this agent actually runs: the container is on Railway, the Mac it
-drives is still a Mac, and the two meet over the Plow relay. `Dockerfile` and
-`00-agent-seed` carry the reasoning, including the two failures it took to get
-there.
-
-Rebuild the seed after changing anything it carries:
-
-```sh
-./deploy/railway/build-seed.sh
-```
-
-**Never run two gateways against one line.** The local container and the cloud
-one share an activation, and two gateways answering one chat race the same
-session database. Bring one down before the other comes up.
+`docker compose logs -f agent` is what it is doing. `bin/plow-agents revoke`
+takes it down and revokes the key.
 
 ## Layout
 
+This repository is a variant of
+[`plow-pbc/plow-hermes-agent`](https://github.com/plow-pbc/plow-hermes-agent):
+the boot layer is vendored from it, and what makes this agent itself is the
+seed.
+
 | path | what it is |
 |---|---|
-| `runtime/SOUL.md` | who the agent is, and the rules it may not break |
-| `runtime/crons.json` | the one scheduled job, as data |
-| `skill/SKILL.md` | how to use the skill's script, and when |
-| `skill/scripts/prenatal.py` | gestational age and the milestone table — the only source of truth for dates |
-| `deploy-hook` | installs both into the agent's home on every deploy |
-| `agent.env` | the descriptor: everything else is derived from the registered name |
-| `deploy/railway/` | the same agent, packaged for a host without `agent-mgr` |
-| `seed/` | the home, built by `build-seed.sh`; committed so the image can be built anywhere |
+| `image/seed/SOUL.md` | who the agent is, and the rules it may not break |
+| `image/seed/skills/health/prenatal/` | the skill: when to run what, and the scripts |
+| `image/seed/config.yaml` | the reference config plus this agent's overrides |
+| `image/crons/crons.json` | the one scheduled job, as data |
+| `image/s6-overlay/s6-rc.d/luna-crons/` | converges that job onto the scheduler at boot |
+| `image/cont-init.d/01-luna-credentials` | writes the credential from the environment on a host with no bind mount |
+| `Dockerfile`, the rest of `image/` | vendored boot layer |
 
 ## The dates are code, not prompt
 
 A model that estimates a due date will eventually estimate it wrong, and every
-reminder after that is wrong with it. `prenatal.py` owns the arithmetic —
-gestational age, Naegele's rule, which milestones the current week falls in —
-and `SOUL.md` forbids doing it any other way. The script refuses a future date
-and refuses one over 300 days old rather than recording a number that would be
-wrong for the whole pregnancy.
+reminder after that is wrong with it.
+[`prenatal.py`](image/seed/skills/health/prenatal/scripts/prenatal.py) owns the
+arithmetic — gestational age, Naegele's rule, which milestones the current week
+falls in, what is overdue and what she has already had — and `SOUL.md` forbids
+doing it any other way. It refuses a future date, and one over 300 days old,
+rather than recording a number that would be wrong for the whole pregnancy.
+
+The same split runs through the rest: the model decides what to say, and a
+script owns anything where being subtly wrong is invisible — filing a document
+so two never collide, URL-encoding a link she will tap without reading.
+
+## Running it somewhere without a bind mount
+
+`plow-init` reads its credential only from `/var/lib/plow/credentials`, and
+drops the process environment as a source on purpose: an environment variable
+must not be able to outrank the credential the image was given. A PaaS has no
+bind mount, so `image/cont-init.d/01-luna-credentials` writes that file from
+`PLOW_API_BASE` and `PLOW_AGENT_TOKEN` — and **never** overwrites one that is
+already there, which keeps a mounted credential authoritative.
+
+That is how this agent actually runs: the container is hosted, the Mac it
+reaches is still a Mac, and the two meet over the Plow relay.
+
+**Never run two agents on one line.** Both answer the same texts and the owner
+cannot tell which replied; `plow-agents mint` refuses a line that is not free
+for exactly that reason.
 
 ## Not medical advice
 
