@@ -21,8 +21,52 @@ SEED=/opt/hermes/plow-home-seed
 
 [ -d "$SEED" ] || { echo "[luna] no $SEED in image -- broken build" >&2; exit 1; }
 
+harden_home() {
+  # The same ownership the Dockerfile sets, for the same reasons. The home
+  # itself must stay writable by uid 10000 -- the gateway creates state.db,
+  # lock files and the session tree directly in it -- while the sticky bit
+  # stops the agent unlinking entries it does not own. That is what keeps a
+  # root-owned SOUL.md unreplaceable inside a directory the agent can write.
+  #
+  # Every per-file line ends in `|| true`: under `set -e` a failing `[ -e x ]
+  # && ...` is a failing command and would abort the boot, so a first boot
+  # without a dotenv would kill the container over a file it is correct not to
+  # have yet.
+  chown -R 10000:10000 "$HOME_DIR"
+  chown root:hermes "$HOME_DIR" "$HOME_DIR/skills" 2>/dev/null || true
+  chmod 3770 "$HOME_DIR" "$HOME_DIR/skills" 2>/dev/null || true
+  if [ -e "$HOME_DIR/SOUL.md" ]; then
+    chown root:root "$HOME_DIR/SOUL.md" || true
+    chmod 0644 "$HOME_DIR/SOUL.md" || true
+  fi
+  if [ -e "$HOME_DIR/config.yaml" ]; then
+    chown 10000:10000 "$HOME_DIR/config.yaml" || true
+    chmod 0640 "$HOME_DIR/config.yaml" || true
+  fi
+  # The dotenv is plow-init's to write, as root, into a directory the agent can
+  # create entries in. One carried over from an earlier deployment is owned by
+  # whatever uid that one ran as, and O_NOFOLLOW|O_CREAT on it fails rather
+  # than silently truncating someone else's file -- which is the crash loop.
+  if [ -e "$HOME_DIR/.env" ]; then
+    chown root:hermes "$HOME_DIR/.env" || true
+    chmod 0640 "$HOME_DIR/.env" || true
+  fi
+  echo "[luna] ownership applied"
+}
+
+# Say what is actually there. A crash-loop on this path costs a build per
+# guess otherwise, and the useful facts are three lines long.
+echo "[luna] running as $(id -u):$(id -g); home:"
+ls -ldn "$HOME_DIR" 2>/dev/null || echo "  (no $HOME_DIR)"
+ls -lan "$HOME_DIR" 2>/dev/null | head -20 || true
+
 if [ -e "$HOME_DIR/SOUL.md" ] && [ -e "$HOME_DIR/config.yaml" ]; then
-  echo "[luna] home already populated -- leaving it alone"
+  # Populated is not the same as correctly owned: a home carried over from an
+  # earlier layout has both files and none of the ownership this image needs.
+  # Reapplying it is idempotent, so it is done unconditionally rather than
+  # trusted to have been done once.
+  echo "[luna] home populated -- reapplying ownership only"
+  harden_home
   exit 0
 fi
 
@@ -31,17 +75,4 @@ mkdir -p "$HOME_DIR"
 # -n: an agent that has already written state keeps it. Only the gaps are
 # filled, which is what makes this safe to run on every boot.
 cp -Rn "$SEED"/. "$HOME_DIR"/
-
-# The same ownership the Dockerfile sets, for the same reasons. The home itself
-# must stay writable by uid 10000 -- the gateway creates state.db, lock files
-# and the session tree directly in it -- while the sticky bit stops the agent
-# unlinking entries it does not own. That is what keeps a root-owned SOUL.md
-# unreplaceable inside a directory the agent can write.
-chown -R 10000:10000 "$HOME_DIR"
-chown root:hermes "$HOME_DIR" "$HOME_DIR/skills"
-chmod 3770 "$HOME_DIR" "$HOME_DIR/skills"
-chown root:root "$HOME_DIR/SOUL.md"
-chmod 0644 "$HOME_DIR/SOUL.md"
-chown 10000:10000 "$HOME_DIR/config.yaml"
-chmod 0640 "$HOME_DIR/config.yaml"
-echo "[luna] home restored"
+harden_home

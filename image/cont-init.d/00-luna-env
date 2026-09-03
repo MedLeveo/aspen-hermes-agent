@@ -1,0 +1,26 @@
+#!/command/with-contenv sh
+# Drop variables from an older deployment that this image must not see.
+#
+# HERMES_UID / HERMES_GID are the upstream base image's user-remapping knobs:
+# stage2 rewrites the `hermes` user to them and chowns the home to match. This
+# image does not use them -- it fixes uid/gid 10000 and sets every mode in the
+# Dockerfile around that -- so a leftover value from a previous deployment
+# remaps the user out from under a filesystem that was built for 10000.
+#
+# A host that sets them cannot always unset them: a PaaS environment is
+# additive, and its API may have no way to remove a variable. s6 keeps the
+# container environment as one file per variable under
+# /run/s6/container_environment, read by `with-contenv` and by stage2 -- so
+# removing the file is how a variable becomes unset for everything that runs
+# after this. cont-init runs in name order and the base image's own setup is
+# 01-hermes-setup, so this lands first.
+set -eu
+
+ENVDIR=/run/s6/container_environment
+
+for name in HERMES_UID HERMES_GID; do
+  if [ -e "$ENVDIR/$name" ]; then
+    echo "[luna] dropping $name=$(cat "$ENVDIR/$name") -- this image fixes uid 10000"
+    rm -f "$ENVDIR/$name"
+  fi
+done

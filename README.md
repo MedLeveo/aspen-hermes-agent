@@ -122,7 +122,7 @@ so two never collide, URL-encoding a link she will tap without reading.
 `plow-init` reads its credential only from `/var/lib/plow/credentials`, and
 drops the process environment as a source on purpose: an environment variable
 must not be able to outrank the credential the image was given. A PaaS has no
-bind mount, so `image/cont-init.d/01-luna-credentials` writes that file from
+bind mount, so `image/cont-init.d/02-luna-credentials` writes that file from
 `PLOW_API_BASE` and `PLOW_AGENT_TOKEN` — and **never** overwrites one that is
 already there, which keeps a mounted credential authoritative.
 
