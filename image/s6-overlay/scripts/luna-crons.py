@@ -74,12 +74,45 @@ def argv_for(row: dict) -> list[str]:
     return argv
 
 
+# A job that exists only to prove the scheduler is alive, on a schedule the
+# host picks. The real job is deliberately quiet -- SOUL.md tells it to skip a
+# morning with nothing to say -- so its silence cannot distinguish "nothing to
+# report" from "the gateway is not running the scheduler at all". That
+# ambiguity cost two days of waiting a whole night per test.
+#
+# Unset in the image, so nothing ships to anyone cloning this. Set
+# LUNA_TEST_CRON to a cron expression on the host, watch the messages arrive,
+# then unset it.
+def test_row(deliver: str) -> dict | None:
+    schedule = os.environ.get("LUNA_TEST_CRON", "").strip()
+    if not schedule:
+        return None
+    return {
+        "name": "luna-scheduler-probe",
+        "schedule": schedule,
+        "deliver": deliver,
+        "skills": ["prenatal"],
+        "prompt": (
+            "This is a scheduled probe, not a message to the owner's day. "
+            "Run the prenatal skill's status script and reply with exactly one "
+            "line: the current time, the gestational week the script reports "
+            "(or 'no week recorded'), and the words 'scheduler alive'. Always "
+            "send it -- silence here is indistinguishable from a dead "
+            "scheduler, which is the whole reason this job exists."
+        ),
+    }
+
+
 def main() -> int:
     if not SPEC.is_file():
         print(f"[cron] no {SPEC} -- this agent ships no jobs")
         return 0
 
     rows = json.loads(SPEC.read_text())
+    probe = test_row(rows[0]["deliver"] if rows else "${PLOW_HOME_CHANNEL}")
+    if probe:
+        print(f"[cron] LUNA_TEST_CRON is set -- adding {probe['name']} ({probe['schedule']})")
+        rows = rows + [probe]
     have = registered_names()
 
     for row in rows:
