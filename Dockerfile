@@ -174,6 +174,30 @@ COPY --chmod=0755 image/cont-init.d/ /etc/cont-init.d/
 #
 # COPY merges into the upstream tree, so the base image's own `user` bundle
 # entries survive alongside ours.
+# Which agent this is on the Agent Index. Baked rather than left to the host:
+# the Index distinguishes installs by an id the client makes up per install, so
+# every copy of this image reporting under one AGENT_ID is the point -- that is
+# how "this agent, across its users" is counted at all. Leaving it to a .env
+# would mean a clone that reports nothing, silently.
+ENV AGENT_ID=luna
+
+# The usage reporter, fetched at build from the commit vendor/client.pin names
+# and checked against the hash beside it. Fetched rather than committed because
+# plow-pbc/agent-index-client owns that file; pinned rather than tracked from a
+# branch because this runs inside an agent holding a live credential, and a
+# moving reference would substitute unreviewed code under it. The checksum is
+# the second half: a sha in a URL is only as good as the host serving it.
+COPY vendor/client.pin /opt/plow/agent-index-client.pin
+RUN set -eu; \
+    sha="$(sed -n 's/^sha=//p' /opt/plow/agent-index-client.pin)"; \
+    want="$(sed -n 's/^sha256=//p' /opt/plow/agent-index-client.pin)"; \
+    path="$(sed -n 's/^path=//p' /opt/plow/agent-index-client.pin)"; \
+    curl -fsS --max-time 60 -o /opt/plow/agent-index-client.py \
+      "https://raw.githubusercontent.com/plow-pbc/agent-index-client/${sha}/${path}"; \
+    got="$(sha256sum /opt/plow/agent-index-client.py | cut -d' ' -f1)"; \
+    [ "$got" = "$want" ] || { echo "agent-index client is $got, pin says $want" >&2; exit 1; }; \
+    chmod 0644 /opt/plow/agent-index-client.py
+
 COPY image/s6-overlay/ /etc/s6-overlay/
 RUN chmod 0755 /etc/s6-overlay/scripts/plow-init.py
 
