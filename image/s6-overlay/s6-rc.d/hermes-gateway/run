@@ -18,4 +18,19 @@ export API_SERVER_PORT=8642
 export HOME=/var/lib/hermes
 
 cd /opt/hermes
-exec /command/s6-setuidgid hermes /opt/hermes/.venv/bin/hermes gateway run --replace --no-supervise
+# --force alongside --replace, for a host where the refusal fires wrongly.
+#
+# `hermes gateway run` refuses when it sees an s6 service for this profile
+# already installed and running, because the case it is written for is a person
+# starting a second gateway from a shell -- which would leave an orphan
+# dispatcher writing to the same kanban DB. Here s6 IS the supervisor and
+# --replace is the sanctioned way to take over, so the check has nothing to
+# protect: the only thing it can refuse is the gateway s6 was told to run.
+#
+# On Railway that refusal fires about ninety seconds after a clean boot and
+# then repeats every two seconds indefinitely, burning 0.6 vCPU and leaving no
+# gateway up -- which is why the daily message never arrived. It does not
+# reproduce locally on the same image and commit, and nothing logs a crash, so
+# the trigger is still unknown. --force removes the refusal's ability to be the
+# thing that stops it; --replace still guarantees one gateway.
+exec /command/s6-setuidgid hermes /opt/hermes/.venv/bin/hermes gateway run --replace --no-supervise --force
