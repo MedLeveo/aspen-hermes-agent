@@ -129,6 +129,20 @@ def main() -> int:
         rows = rows + [probe]
     have = registered()
 
+    # Turning the probe off has to remove it, not just stop registering it: it
+    # is already on the scheduler and would keep firing every few minutes into
+    # the owner's thread forever. Only this job, and only by the name this
+    # script gives it -- jobs the spec does not name are the agent's own.
+    if not os.environ.get("LUNA_TEST_CRON", "").strip():
+        stale = have.get("luna-scheduler-probe")
+        if stale is not None:
+            gone = subprocess.run([HERMES, "cron", "remove", stale["id"]],
+                                  capture_output=True, text=True)
+            print(f"[cron] LUNA_TEST_CRON unset -- probe removed"
+                  if gone.returncode == 0 else
+                  f"[cron] could not remove the probe: "
+                  f"{(gone.stderr or gone.stdout).strip()}")
+
     for row in rows:
         name = row["name"]
         live = have.get(name)
