@@ -45,3 +45,21 @@ if [ -e "$HOME_DIR/.env" ]; then
 fi
 
 echo "[luna] home: $(ls -ldn "$HOME_DIR")"
+
+# Keys this repo owns, into a home whose config already exists.
+#
+# cont-init seeds config.yaml only when it is absent, and plow-init's edit is
+# deliberately narrow -- model and provider, "and touches nothing else". So a
+# key added to the seed after an agent's first boot reaches nobody, which is
+# how a setting can be correct in git and missing in production.
+#
+# As the agent, not as root: the chat plugin rewrites this file on every
+# connect, and root taking ownership of it would break that -- and on a host
+# where root is not privileged, root cannot write it anyway.
+if [ -x /etc/s6-overlay/scripts/luna-config.py ]; then
+  if command -v s6-setuidgid >/dev/null 2>&1 && [ "$(id -u)" = 0 ]; then
+    s6-setuidgid hermes /etc/s6-overlay/scripts/luna-config.py || true
+  else
+    /etc/s6-overlay/scripts/luna-config.py || true
+  fi
+fi
