@@ -42,16 +42,23 @@ SPEC = Path("/opt/hermes/plow-seed/crons.json")
 PLACEHOLDER = re.compile(r"\$\{([A-Z0-9_]+)\}")
 
 
-def registered_names() -> set[str]:
+def registered() -> dict[str, dict]:
+    """The jobs already on the scheduler, by name.
+
+    The whole job, not just its name: a row whose `deliver` has been corrected
+    since it was registered has to be replaced, and creation-only convergence
+    cannot see that. It is what left a job firing every five minutes into a
+    delivery target the scheduler rejects.
+    """
     if not JOBS.is_file():
-        return set()
+        return {}
     try:
         data = json.loads(JOBS.read_text())
     except (json.JSONDecodeError, OSError) as exc:
         # Unreadable is not empty: treating it as empty would re-create every
         # job on every boot and duplicate them.
         raise SystemExit(f"[cron] cannot read {JOBS}: {exc}")
-    return {j.get("name") for j in data.get("jobs", []) if j.get("name")}
+    return {j["name"]: j for j in data.get("jobs", []) if j.get("name")}
 
 
 def expand(value: str) -> str:
@@ -116,17 +123,30 @@ def main() -> int:
         return 0
 
     rows = json.loads(SPEC.read_text())
-    probe = test_row(rows[0]["deliver"] if rows else "${PLOW_HOME_CHANNEL}")
+    probe = test_row(rows[0]["deliver"] if rows else "plow_chat")
     if probe:
         print(f"[cron] LUNA_TEST_CRON is set -- adding {probe['name']} ({probe['schedule']})")
         rows = rows + [probe]
-    have = registered_names()
+    have = registered()
 
     for row in rows:
         name = row["name"]
-        if name in have:
-            print(f"[cron] {name} already registered")
-            continue
+        live = have.get(name)
+        if live is not None:
+            want = expand(row["deliver"])
+            if live.get("deliver") == want:
+                print(f"[cron] {name} already registered")
+                continue
+            # Drifted: remove and re-create rather than leave it firing into a
+            # target the scheduler refuses.
+            print(f"[cron] {name} delivers to {live.get('deliver')!r}, spec says "
+                  f"{want!r} -- replacing")
+            gone = subprocess.run([HERMES, "cron", "remove", live["id"]],
+                                  capture_output=True, text=True)
+            if gone.returncode != 0:
+                print(f"[cron] could not remove {name}: "
+                      f"{(gone.stderr or gone.stdout).strip()}", file=sys.stderr)
+                continue
         result = subprocess.run(argv_for(row), capture_output=True, text=True)
         if result.returncode == 0:
             print(f"[cron] created {name} ({row['schedule']})")

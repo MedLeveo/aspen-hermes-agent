@@ -2,7 +2,7 @@
   {
     "name": "nina-daily",
     "schedule": "0 8 * * *",
-    "deliver": "${PLOW_HOME_CHANNEL}",
+    "deliver": "plow_chat",
     "skills": [
       "prenatal"
     ],
