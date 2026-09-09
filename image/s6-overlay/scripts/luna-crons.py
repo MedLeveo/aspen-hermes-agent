@@ -4,8 +4,15 @@
 There is no cron-sync in the Plow agent contract, and nothing outside the
 container to run one: `docker compose up` is the whole of starting an agent. So
 the convergence runs from the image, as an s6 oneshot after plow-init and
-before the gateway -- the jobs land in the home's cron store, which the gateway
-reads when it comes up.
+BEFORE the gateway.
+
+That ordering is the whole point, and it was missing. The gateway reads the
+cron store once, when it starts. Declared only against plow-init, this oneshot
+ran in parallel with the gateway and finished 45ms after it -- so the job
+landed in jobs.json, this script reported "already registered" on every later
+boot, and the running scheduler had never seen it. Four days of mornings passed
+with the agent answering messages normally and no scheduled job ever firing.
+hermes-gateway now depends on this service, which is what makes "before" true.
 
 Creation only, like agent-mgr's v1: a job whose name is already registered is
 left alone, whatever state it is in. Nothing here edits or deletes, so a job
