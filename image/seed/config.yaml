@@ -99,6 +99,14 @@ platforms:
 # on the box to hand a terminal to.
 terminal:
   backend: local
+# Cron output is wrapped by default with a header naming the job and its id,
+# and a footer explaining that the agent cannot see the message. That is
+# written for an operator watching a scheduled task. Here the delivery IS the
+# product -- a message from someone who keeps track of her, arriving in the
+# morning -- and a job id above it turns that into a system notice.
+cron:
+  wrap_response: false
+
 group_sessions_per_user: false
 onboarding:
   profile_build: "off"
