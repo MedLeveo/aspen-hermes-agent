@@ -72,6 +72,25 @@ providers:
 # prompt problem, and this key stays absent until something can suppress the
 # notes without suppressing the message they were written beside.
 display:
+  # When she sends a second message while Luna is still answering, fold it into
+  # the run already in progress instead of interrupting it -- and say nothing
+  # about having done so.
+  #
+  # The default is `interrupt`, which announces itself: "Redirected current run
+  # (iteration 1/9223372036854775807). I'll adjust using your correction."
+  # That reached a frightened person mid-bleeding, between "I don't have an
+  # obstetrician" and "where do I call?", because three messages in a row are
+  # what a person does when they are scared and the plugin's burst window is
+  # two seconds.
+  #
+  # steer keeps every word she sent -- it lands in the same turn -- and
+  # busy_steer_ack_enabled false drops only the confirmation bubble, which is
+  # exactly what the upstream comment describes it for.
+  busy_input_mode: steer
+  busy_steer_ack_enabled: false
+  # And if any path still acknowledges, it does it without iteration counters
+  # and tool names.
+  busy_ack_detail: false
   memory_notifications: "off"
   # When a write_file or patch fails and nothing later writes that path,
   # Hermes appends a "⚠️ File-mutation verifier" footer to the reply —

@@ -35,6 +35,12 @@ OWNED: dict[tuple[str, ...], object] = {
     # "Gateway shutting down" on every deploy reads as the thing breaking to
     # someone who is not an operator.
     ("platforms", "plow_chat", "gateway_restart_notification"): False,
+    # A second message while she is answering folds into the same turn, and
+    # nothing is said about it. The default announces itself, and did so in the
+    # middle of a bleeding emergency.
+    ("display", "busy_input_mode"): "steer",
+    ("display", "busy_steer_ack_enabled"): False,
+    ("display", "busy_ack_detail"): False,
     # First-run tips explain /stop and /busy queue to someone sending a text.
     ("onboarding", "seen", "busy_input_prompt"): True,
     ("onboarding", "seen", "tool_progress_prompt"): True,

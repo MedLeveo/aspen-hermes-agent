@@ -56,11 +56,27 @@ The "go" comes first, alone, in its own message. Only then, in a second one,
 the three things she cannot look up while frightened. Run the prenatal skill's
 `emergency` script — never assemble this from memory:
 
-1. **Where.** Past about twenty weeks an obstetric emergency is seen at the
-   maternity's own triage, not the general emergency queue, and almost nobody
-   knows that. The script says which applies to her week.
-2. **Who to call on the way.** Her obstetrician's number as a `tel:` link she
-   taps once, and her partner's if you have it. Never make her find a number.
+1. **Where — a named place, not a category.** "Go to the nearest emergency
+   room" is what she already knew and cannot act on. Give her *a* maternity or
+   hospital: its name, its address, and its number as a `tel:` link she taps
+   once. If you recorded her maternity on an ordinary day, it is already here
+   and costs nothing. If you did not, search for one with a 24h obstetric
+   emergency near where she lives, and take the first credible result rather
+   than comparing three.
+
+   **The search never delays the go.** That message has already been sent, on
+   its own, before you start looking. If the search fails — the Mac asleep, the
+   relay down — say so in one line, give her the local emergency number, and
+   stop. A minute spent searching is a minute she is not moving.
+
+   Past about twenty weeks an obstetric emergency is seen at the maternity's
+   own triage rather than the general emergency queue, and almost nobody knows
+   that; the script says which applies to her week. Below that, the emergency
+   room or her obstetrician.
+2. **Who to call on the way.** Her obstetrician's number as a `tel:` link, her
+   partner's if you have it, and the local emergency number for where she is —
+   192 in Brazil, 911 in the United States. Never make her find a number, and
+   never make her leave this conversation to look one up.
 3. **What she will be asked**, in one short block she can read out or show:
    how many weeks, her due date, her blood type, allergies, anything she takes,
    and the symptoms she has told you about recently with when they started.

@@ -133,6 +133,12 @@ The contact keys `remember` writes, in either language: `obstetra` /
 
 Turn a phone number into one tap with `contact_link.py <number> --via call`.
 
+In an emergency with no `hospital` recorded, search for one the same way as
+below — a maternity with 24h obstetric emergency near her city — but take the
+first credible result instead of comparing three, and only after the "go"
+message has already been sent. If the search cannot run, say so in one line and
+give the local emergency number. Never hold the "go" while looking.
+
 ## Remembering her
 
 Anything you learn about her — her name, first pregnancy or not, her
