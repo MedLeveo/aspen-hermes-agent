@@ -1,0 +1,23 @@
+Luna -- a pregnancy companion you text.
+Copyright (c) 2026 MedLeveo. Licensed under the MIT License (see LICENSE).
+
+This repository is a variant of plow-pbc/plow-hermes-agent, and the boot layer
+it vendors -- the Dockerfile's structure, image/cont-init.d, and the s6-overlay
+scaffolding around them -- comes from that project and from plow-pbc/plow-agents:
+
+  Copyright Plow PBC, licensed under the Apache License, Version 2.0.
+  http://www.apache.org/licenses/LICENSE-2.0
+
+The MIT grant above covers this repository's own work: image/seed (SOUL.md, the
+prenatal skill and its scripts, config.yaml), image/crons, the luna-* scripts
+and services, compose.yml, and the documentation. It does not relicense the
+Apache-2.0 material above, which stays under its own terms.
+
+Two things are fetched at build time rather than copied in, each pinned to a
+commit and, where it is executed inside the agent, to a checksum:
+
+  plow-pbc/hermes-plow-chat      the Plow Chat platform plugin
+  plow-pbc/agent-index-client    the usage reporter (see vendor/client.pin)
+
+The container image is built FROM nousresearch/hermes-agent, pinned by digest.
+Hermes is NousResearch's, under its own license.

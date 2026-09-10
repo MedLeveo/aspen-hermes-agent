@@ -197,6 +197,12 @@ reaches is still a Mac, and the two meet over the Plow relay.
 cannot tell which replied; `plow-agents mint` refuses a line that is not free
 for exactly that reason.
 
+## License
+
+MIT — see [`LICENSE`](LICENSE). [`NOTICE`](NOTICE) records what is vendored
+from Plow PBC under Apache-2.0, and what is fetched at build time rather than
+copied in.
+
 ## Not medical advice
 
 Luna is a logistics and memory tool. It is not a medical device, it does not

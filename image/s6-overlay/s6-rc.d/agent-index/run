@@ -38,19 +38,44 @@ if [ -z "$AGENT_ID" ]; then
   exec sleep 86400
 fi
 
+# What the listing actually says. Registration is the only way to set these,
+# and an agent registered bare -- which this was -- gets a row with no name, no
+# description and no link to its source. That row is on a page whose whole
+# purpose is someone deciding whether to install it.
+INDEX_NAME='Luna'
+INDEX_BLURB='Text it how far along you are. It tracks the week, raises the exams and deadlines it calls for, reads what you photograph, and never reassures you past a red flag.'
+INDEX_REPO='https://github.com/MedLeveo/aspen-hermes-agent'
+INDEX_RUNTIME='hermes'
+
+# Registering also mints a key, so it cannot run every hour. It runs when there
+# is no key, and again only when this text differs from what the index last
+# accepted -- which is what makes an edit here reach the page at all.
+LISTING_FILE="$HERMES_HOME/.agent-index/listing"
+LISTING_NOW="$INDEX_NAME|$INDEX_BLURB|$INDEX_REPO|$INDEX_RUNTIME"
+
 while :; do
   # The pinned client owns assertion exchange, aik_ format and atomic storage.
   # The image only invokes it; no image-owned HTTP path can hand the broad Plow
   # bearer to the Index.
-  if [ ! -s "$HERMES_HOME/.agent-index/token" ]; then
-    /command/s6-setuidgid hermes \
+  LISTING_WAS=$(/bin/cat "$LISTING_FILE" 2>/dev/null || true)
+  if [ ! -s "$HERMES_HOME/.agent-index/token" ] || [ "$LISTING_NOW" != "$LISTING_WAS" ]; then
+    # Output kept, not sent to /dev/null: this prints the agent's public URL,
+    # and the server's own warning about any field it refused to store.
+    if /command/s6-setuidgid hermes \
       env HOME="$HERMES_HOME" AGENT_ID="$AGENT_ID" PLOW_AGENT_TOKEN="$PLOW_AGENT_TOKEN" \
       /opt/hermes/.venv/bin/python3 /opt/plow/agent-index-client.py \
-      --register --agent "$AGENT_ID" >/dev/null || {
-    echo "agent-index: no index key this hour, not reporting" >&2
-    /bin/sleep 3600
-    continue
-    }
+      --register --agent "$AGENT_ID" \
+      --name "$INDEX_NAME" --blurb "$INDEX_BLURB" \
+      --repo "$INDEX_REPO" --runtime "$INDEX_RUNTIME"; then
+      # As the agent, because the directory is the agent's -- and on a host
+      # where root is not privileged, root could not write here anyway.
+      /command/s6-setuidgid hermes /bin/sh -c \
+        'printf %s "$1" > "$2"' sh "$LISTING_NOW" "$LISTING_FILE" || true
+    else
+      echo "agent-index: registration failed, not reporting this hour" >&2
+      /bin/sleep 3600
+      continue
+    fi
   fi
 
   # No PLOW_AGENT_TOKEN in this environment. The client finds the key the
