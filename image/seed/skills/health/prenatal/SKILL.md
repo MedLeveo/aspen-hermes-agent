@@ -108,6 +108,31 @@ beginning. After the appointment, close it so the next brief starts clean:
 python3 <this skill's dir>/scripts/prenatal.py visit-done
 ```
 
+## The emergency card
+
+One call, everything she will be asked, and where care actually is for her week:
+
+```
+python3 <this skill's dir>/scripts/prenatal.py emergency
+```
+
+Returns her week and due date, whether an obstetric emergency at this stage is
+seen at maternity triage or the general emergency room, her obstetrician and
+their number, hospital, partner, blood type, allergies, medications, and the
+symptoms she has mentioned recently. `missing` lists what has never been
+recorded — use it to pick the one thing to ask about on an ordinary day.
+
+Build the reply from this output, never from memory. It is read out to a
+stranger in a triage room, and a week that is close-but-wrong there is worse
+than not knowing.
+
+The contact keys `remember` writes, in either language: `obstetra` /
+`obstetrician`, `telefone_obstetra` / `obstetrician_phone`, `maternidade` /
+`hospital`, `telefone_parceiro` / `partner_phone`, `tipo_sanguineo` /
+`blood_type`, `alergias` / `allergies`, `medicamentos` / `medications`.
+
+Turn a phone number into one tap with `contact_link.py <number> --via call`.
+
 ## Remembering her
 
 Anything you learn about her — her name, first pregnancy or not, her

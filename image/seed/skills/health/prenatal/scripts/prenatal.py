@@ -241,6 +241,10 @@ def main() -> int:
     sub.add_parser("schedule")
     sub.add_parser("profile")
 
+    p_emerg = sub.add_parser(
+        "emergency", help="everything she will be asked, in one place")
+    p_emerg.add_argument("--today", default=None)
+
     args = ap.parse_args()
     today = parse_day(args.today) if getattr(args, "today", None) else date.today()
 
@@ -334,6 +338,53 @@ def main() -> int:
 
     elif args.cmd == "visit-brief":
         print(json.dumps(visit_brief(today), indent=2, ensure_ascii=False))
+        return 0
+
+    elif args.cmd == "emergency":
+        # Assembled by a script, never from the model's memory: this gets read
+        # out by a frightened person to a stranger in a triage room, and a week
+        # or a due date that is close-but-wrong there is worse than none.
+        data = load()
+        st = status(today)
+        about = data.get("about", {})
+        week = st.get("week") or 0
+
+        def known(*keys):
+            for k in keys:
+                if about.get(k):
+                    return about[k]
+            return None
+
+        print(json.dumps({
+            "week": st.get("display"),
+            "edd": st.get("edd"),
+            "trimester": st.get("trimester"),
+            # Where an obstetric emergency is seen changes with the week, and
+            # it is the fact she is least likely to know: past viability it is
+            # the maternity's own triage, not the general emergency queue.
+            "where_care_usually_is": (
+                "obstetric / maternity triage, not the general emergency queue"
+                if week >= 20 else
+                "emergency room or her obstetrician, this early in the pregnancy"),
+            "obstetrician": known("obstetra", "obstetrician"),
+            "obstetrician_phone": known("telefone_obstetra", "obstetrician_phone"),
+            "hospital": known("maternidade", "hospital"),
+            "partner_phone": known("telefone_parceiro", "partner_phone"),
+            "blood_type": known("tipo_sanguineo", "blood_type"),
+            "allergies": known("alergias", "allergies"),
+            "medications": known("medicamentos", "medications"),
+            "recent_symptoms": [
+                {"on": n["on"], "week": n.get("week"), "text": n["text"]}
+                for n in open_notes(data) if n["kind"] == "symptom"
+            ][-5:],
+            # What to collect on an ordinary day, so it is already here on the
+            # day it is needed.
+            "missing": [name for name, value in (
+                ("obstetrician_phone", known("telefone_obstetra", "obstetrician_phone")),
+                ("hospital", known("maternidade", "hospital")),
+                ("blood_type", known("tipo_sanguineo", "blood_type")),
+            ) if not value],
+        }, indent=2, ensure_ascii=False))
         return 0
 
     print(json.dumps(status(today), indent=2, ensure_ascii=False))
