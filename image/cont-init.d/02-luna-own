@@ -63,3 +63,16 @@ if [ -x /etc/s6-overlay/scripts/luna-config.py ]; then
     /etc/s6-overlay/scripts/luna-config.py || true
   fi
 fi
+
+# Start a new conversation when the identity has changed under it.
+#
+# Before the gateway, which is the only moment the routing table is not being
+# written; as the agent, because the store is the agent's. Off unless
+# LUNA_RESET_SESSION is set.
+if [ -x /etc/s6-overlay/scripts/luna-reset-session.py ]; then
+  if command -v s6-setuidgid >/dev/null 2>&1 && [ "$(id -u)" = 0 ]; then
+    s6-setuidgid hermes /etc/s6-overlay/scripts/luna-reset-session.py || true
+  else
+    /etc/s6-overlay/scripts/luna-reset-session.py || true
+  fi
+fi
