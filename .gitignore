@@ -1,3 +1,12 @@
 .DS_Store
 *.incoming
 __pycache__/
+
+# The Plow credential `plow-agents mint` writes here. A live token for a line
+# that can send messages as its owner -- never committed, and named in
+# .dockerignore too so it does not reach an image layer either.
+/plow-credentials
+
+# Only TZ so far, but it sits beside compose.yml where anything host-specific
+# ends up.
+/.env

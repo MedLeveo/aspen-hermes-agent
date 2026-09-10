@@ -61,43 +61,72 @@ clarifying question first.
 
 ## Running it
 
-You need Docker, a Mac running [Plow Latch](https://github.com/plow-pbc/latch)
-if you want it to reach a browser, and
-[`plow-agents`](https://github.com/plow-pbc/plow-agents).
+You need Docker and Python 3. You do **not** need to be pregnant to try it:
+tell it "I'm 22 weeks" and everything works from there — the morning message,
+the exam it raises next, reading a photographed lab, the emergency rule.
+
+A Mac running [Plow Latch](https://github.com/plow-pbc/latch) is optional, and
+only for the one thing that needs a browser: finding somewhere to go.
+
+Get the credential CLI:
 
 ```sh
 git clone https://github.com/plow-pbc/plow-agents.git
-cd plow-agents
-
-bin/plow-agents login          # texts you a code; the handset that sends it is
-                               # the identity. Add --new-line only if this
-                               # account has no assistant line yet.
-bin/plow-agents lines          # pick one marked `free`
-bin/plow-agents mint ln_xxx    # writes ./plow-credentials
+export PATH="$PWD/plow-agents/bin:$PATH"
 ```
 
-**Set your timezone before starting it.** The container is UTC otherwise, and
-the daily morning message is scheduled for 08:00 — which would reach you at
-four in the morning. One line in `.env`, beside `compose.yml`:
+Then this agent:
 
 ```sh
-echo 'TZ=America/New_York' >> .env
+git clone https://github.com/MedLeveo/aspen-hermes-agent.git
+cd aspen-hermes-agent
+```
+
+Log in — it prints an activation phrase to text from the handset that owns the
+account, and that handset is the identity. Add `--new-line` only if the account
+has no assistant line yet. Pick a line marked `free`:
+
+```sh
+plow-agents login
+plow-agents lines
+plow-agents mint ln_xxx
+```
+
+`mint` writes `./plow-credentials`, and it has to run **before** the first
+`up`: Docker creates a missing bind source as a directory, and the agent then
+finds a directory where its credential should be.
+
+**Set your timezone.** The container is UTC otherwise, and the morning message
+is scheduled for 08:00 — which would reach you at four in the morning. One line
+in `.env`, beside `compose.yml`:
+
+```sh
+echo 'TZ=America/New_York' > .env
 ```
 
 Then:
 
 ```sh
-PLOW_AGENT_REPO=https://github.com/MedLeveo/aspen-hermes-agent.git#main \
-  docker compose up --build
+docker compose up --build -d
 ```
 
-Then text the number that line answers on and say hello.
+The first build takes a few minutes. Watch `docker compose logs -f agent`
+until `plow-init: configured ... as cht_` appears, then text the number that
+line answers on and say hello.
 
 No API key: inference comes from Plow, and the credential `mint` writes is the
-only one the container ever sees. The first build takes a few minutes.
+only one the container ever sees.
 
-`docker compose logs -f agent` is what it is doing. `bin/plow-agents revoke`
-takes it down and revokes the key.
+When you are done, retire the agent and remove its memory:
+
+```sh
+plow-agents revoke
+docker compose down -v
+```
+
+`docker compose down` on its own keeps the conversation and her record. `down
+-v` is also what an edited `SOUL.md` needs, since the identity is read when a
+session is created and not afterwards.
 
 ## Layout
 
@@ -108,6 +137,7 @@ seed.
 
 | path | what it is |
 |---|---|
+| `compose.yml` | how it is run: the credential mount, the home volume, the timezone |
 | `image/seed/SOUL.md` | who the agent is, and the rules it may not break |
 | `image/seed/skills/health/prenatal/` | the skill: when to run what, and the scripts |
 | `image/seed/config.yaml` | the reference config plus this agent's overrides |

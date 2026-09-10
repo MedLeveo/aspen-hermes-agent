@@ -1,0 +1,39 @@
+# How this agent is run. The credential CLI's repo says it plainly -- "your
+# repository owns compose.yml" -- and ships only an example, so a variant
+# without this file has no documented way to start at all.
+services:
+  agent:
+    build: .
+
+    volumes:
+      # `.host` because the image copies it into place as root: the file's
+      # ownership on the host does not have to be anything in particular.
+      #
+      # Mint BEFORE the first `up`. Docker creates a missing bind source as a
+      # DIRECTORY, and plow-init then finds a directory where its credential
+      # should be. Recovering means `docker compose down -v && rmdir
+      # plow-credentials`, which also discards the home.
+      - ./plow-credentials:/var/lib/plow/credentials.host:ro
+      # The conversation, the session, and her record. Survives `up`/`down`;
+      # `down -v` is what discards it.
+      - agent-home:/var/lib/hermes
+
+    environment:
+      # The container is UTC unless told otherwise, and the morning message is
+      # scheduled at 08:00 -- which is 4am for someone on the US east coast.
+      # Set TZ in a .env file beside this one.
+      TZ: ${TZ:-UTC}
+
+    # AGENT_ID is not set here on purpose. The image carries it, because every
+    # copy reporting under the same id is the point; naming it again here would
+    # be a second place that can disagree with the first.
+
+    # The agent checkpoints on SIGTERM and its supervisor allows 30s. Docker's
+    # default is 10s, which cuts the checkpoint off and orphans the transcript
+    # lease.
+    stop_grace_period: 35s
+
+    # No ports. It reaches Plow outbound and nothing reaches it.
+
+volumes:
+  agent-home:
